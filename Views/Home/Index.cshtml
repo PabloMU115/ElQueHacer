@@ -1,0 +1,465 @@
+﻿@{
+	ViewData["Title"] = "Home Page";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-1 ms-3" style="max-width: 300px;">
+	<h4>Mi lista de Tareas</h4>
+	<button type="button" class="btn btn-success btn-sm btn-edit" onclick="openModalCreate(null)">
+		<i class="far fa-plus-square"></i>
+	</button>
+</div>
+
+
+<div class="container-fluid px-3" style="height: 80vh; overflow-y: scroll;" id="contenedor">
+</div>
+
+@* ---------------------------------- Modal Crear ------------------------------- *@
+<div class="modal fade"
+	 id="create"
+	 data-bs-backdrop="static"
+	 data-bs-keyboard="false"
+	 tabindex="-1"
+	 aria-labelledby="staticBackdropLabel"
+	 aria-hidden="true"
+	 style="background-color: rgba(0, 0, 0, 0.2) !important;">
+	<div class="modal-dialog modal-dialog-centered">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h1 class="modal-title fs-5" id="staticBackdropLabel">Crear nueva tarea</h1>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			</div>
+			<div class="modal-body">
+
+				<div class="form-floating px1 mb-2">
+					<input type="text" class="form-control" id="titulo_Input_Create" placeholder="Titulo" value="">
+					<label for="floatingInput">Titulo</label>
+				</div>
+				<div class="form-floating px1 mb-2">
+					<textarea maxlength="150"
+							  class="form-control"
+							  style="max-height: 100px; overflow:hidden; resize:none;"
+							  id="descripcion_Input_Create"
+							  placeholder="Máximo 150 caracteres"
+							  oninput="actualizarContadorCreate(this)"></textarea>
+					<p class="ms-lg-2 mt-1" id="contador_Create">0/150 caracteres</p>
+					<label for="floatingInput">Descripción</label>
+				</div>
+				<p class="mb-0">Seleccione si la tarea ya fue completada de antemano:</p>
+				<div class="d-flex gap-2">
+					<input type="radio" id="confirm" name="completada_Input_Create" value="1">
+					<label for="si">Si</label><br>
+					<input type="radio" id="deny" name="completada_Input_Create" value="0" checked>
+					<label for="no">No</label><br>
+				</div>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+				<button type="button" class="btn btn-primary" onclick="crearTarea()">Confirmar</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+@* ---------------------------------- Modal Editar ------------------------------- *@
+<div class="modal fade"
+	 id="edit"
+	 data-bs-backdrop="static"
+	 data-bs-keyboard="false"
+	 tabindex="-1"
+	 aria-labelledby="staticBackdropLabel"
+	 aria-hidden="true"
+	 style="background-color: rgba(0, 0, 0, 0.2) !important;">
+	<div class="modal-dialog modal-dialog-centered">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h1 class="modal-title fs-5" id="staticBackdropLabel">Editar tarea</h1>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			</div>
+			<div class="modal-body">
+
+				<div class="form-floating px1 mb-2">
+					<input type="text" class="form-control" id="titulo_Input_Edit" placeholder="Titulo" value="Sexo">
+					<label for="floatingInput">Titulo</label>
+				</div>
+				<div class="form-floating px1 mb-2">
+					<textarea maxlength="150"
+							  class="form-control"
+							  style="max-height: 100px; overflow:hidden; resize:none;"
+							  id="descripcion_Input_Edit"
+							  placeholder="Máximo 150 caracteres"
+							  oninput="actualizarContadorEdit(this)">Sexo</textarea>
+					<p class="ms-lg-2 mt-1" id="contador_Edit">0/150 caracteres</p>
+					<label for="floatingInput">Descripción</label>
+				</div>
+				<p class="mb-0">Seleccione si la tarea ya fue completada de antemano:</p>
+				<div class="d-flex gap-2">
+					<input type="radio" id="confirm" name="completada_Input_Edit" value="1">
+					<label for="si">Si</label><br>
+					<input type="radio" id="deny" name="completada_Input_Edit" value="0" checked>
+					<label for="no">No</label><br>
+				</div>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+				<button type="button" class="btn btn-primary" onclick="editTarea()">Confirmar</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+@* ---------------------------------- Modal Eliminar ------------------------------- *@
+<div class="modal fade"
+	 id="delete"
+	 data-bs-backdrop="static"
+	 data-bs-keyboard="false"
+	 tabindex="-1"
+	 aria-labelledby="staticBackdropLabel"
+	 aria-hidden="true"
+	 style="background-color: rgba(0, 0, 0, 0.2) !important;">
+	<div class="modal-dialog modal-dialog-centered">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h1 class="modal-title fs-5" id="staticBackdropLabel">Crear nueva tarea</h1>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			</div>
+			<div class="modal-body">
+				<h3>¿Desea eliminar esta tarea?</h3>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+				<button type="button" class="btn btn-primary" onclick="deleteTarea()">Confirmar</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+
+@section Scripts {
+	<script>
+		const usuarioId = "@ViewBag.UsuarioId";
+		let tareaSeleccionada = "";
+
+		$(document).ready(function () {
+			// Petición AJAX para obtener las tareas
+			$.ajax({
+				url: '@Url.Action("listarTareas", "Tareas")',
+				type: 'GET',
+				dataType: 'json',
+				success: function (response) {
+					// Acceder al array de tareas en response.data
+					const tareas = response.data;
+
+					// Limpia el contenido actual del contenedor
+					$("#contenedor").empty();
+
+					// Creamos un div fila para contener las tarjetas
+					let fila = $('<div class="row"></div>');
+
+					tareas.forEach((tarea, index) => {
+						const completadaTexto = tarea.completada ? "Si" : "No";
+
+						const tareaHtml = `
+							<div class="col-md-6 mb-3">
+								<div class="card">
+									<div class="card-body">
+										<div class="d-flex justify-content-between" id="${tarea.id}">
+											<h5 id="titulo" class="mb-0">${tarea.titulo}</h5>
+											<div>
+											<button type="button"class="btn btn-warning btn-sm btn-edit" onclick="openModalEdit(this)">
+												<i class="fa-solid fa-pencil"></i>
+											</button>
+											<button type="button" class="btn btn-danger btn-sm btn-edit" onclick="openModalDelete(this)">
+												<i class="fa-solid fa-trash"></i>
+											</button>
+											</div>
+										</div>
+									<p id="descripcion_${tarea.id}">${tarea.descripcion}</p>
+									<div class="d-flex gap-1">
+									<strong>Completada:</strong>
+									<p id="completada_${tarea.id}">${completadaTexto}</p>
+									</div>
+									</div>
+								</div>
+							</div>
+						`;
+
+						// Agrega la tarjeta a la fila
+						fila.append(tareaHtml);
+
+						// Cada 2 elementos, añade la fila al contenedor y crea una nueva fila
+						if ((index + 1) % 2 === 0) {
+							$("#contenedor").append(fila);
+							fila = $('<div class="row"></div>');
+						}
+					});
+
+		// Si quedó una fila con menos de 2 elementos, también la agregamos
+		if (tareas.length % 2 !== 0) {
+			$("#contenedor").append(fila);
+		}
+
+				},
+				error: function (err) {
+					console.error("Error al cargar las tareas:", err);
+				}
+			});
+		});
+
+
+		function openModalCreate() {
+				$("#create").modal("show");
+			}
+
+		function limpiarCreate() {
+				document.getElementById('titulo_Input_Create').value = '';
+				document.getElementById('descripcion_Input_Create').value = '';
+				document.getElementById('contador_Create').textContent = '0/150 caracteres';
+				const radio = document.querySelector('input[name="completada_Input_Create"][value="0"]');
+					if (radio) {
+						radio.checked = true;
+					}
+
+			}
+
+		document.addEventListener('DOMContentLoaded', function () {
+			const modal = document.getElementById('create');
+			modal.addEventListener('hidden.bs.modal', function () {
+				limpiarCreate();
+			});
+		});
+
+		function validarCamposCrear()
+		{
+			 const Titulo = $("#titulo_Input_Create").val().trim();
+
+			 if (!Titulo) {
+				 alert("Titulo es obligatorio.");
+				 return false;
+			 }
+			 else{
+				 return true;
+			 }
+		}
+
+		function crearTarea() {
+			if (!validarCamposCrear()) return;
+			const ranges = [
+				[65, 90],   // A-Z
+				[97, 122]   // a-z
+			];
+			const [min, max] = ranges[Math.floor(Math.random() * ranges.length)];
+			const codigo = Math.floor(Math.random() * (max - min + 1)) + min;
+			const caracter =  String.fromCharCode(codigo);
+			var tarea = {
+				IdTarea: "U" + (Math.floor(Math.random() * 99) + 10) + caracter,
+				Titulo: $("#titulo_Input_Create").val(),
+				Descripcion: $("#descripcion_Input_Create").val(),
+				Completada: parseInt($("input[name='completada_Input_Create']:checked").val()),
+				IdUsuario: usuarioId
+			}
+
+			jQuery.ajax({
+			url: '@Url.Action("CrearTarea", "Tareas")',
+			type: "POST",
+			data: JSON.stringify(tarea),
+			dataType: "json",
+			contentType: "application/json; charset=utf-8",
+			success: function (data) {
+				if (data.result == 1) {
+					limpiarCreate();
+					const completadaTexto = tarea.Completada ? "Si" : "No";
+
+					const tareaHtml = `
+							<div class="col-md-6 mb-3">
+								<div class="card">
+									<div class="card-body">
+										<div class="d-flex justify-content-between" id="${tarea.IdTarea}">
+											<h5 id="titulo" class="mb-0">${tarea.Titulo}</h5>
+											<div>
+											<button type="button"class="btn btn-warning btn-sm btn-edit" onclick="openModalEdit(this)">
+												<i class="fa-solid fa-pencil"></i>
+											</button>
+											<button type="button" class="btn btn-danger btn-sm btn-edit" onclick="openModalDelete(this)">
+												<i class="fa-solid fa-trash"></i>
+											</button>
+											</div>
+										</div>
+									<p id="descripcion_${tarea.IdTarea}">${tarea.Descripcion}</p>
+									<div class="d-flex gap-1">
+									<strong>Completada:</strong>
+									<p id="completada_${tarea.IdTarea}">${completadaTexto}</p>
+									</div>
+									</div>
+								</div>
+							</div>
+						`;
+
+					// Buscar la última fila dentro del contenedor
+					let filas = $("#contenedor .row");
+					let ultimaFila = filas.last();
+
+					// Si no hay filas aún, crea una nueva
+					if (ultimaFila.length === 0 || ultimaFila.children().length >= 2) {
+						ultimaFila = $('<div class="row"></div>');
+						$("#contenedor").append(ultimaFila);
+					}
+
+					// Agrega la nueva tarjeta a la última fila
+					ultimaFila.append(tareaHtml);
+					alert("Tarea creada de forma exitosa")
+					$('#create').modal('hide');
+							}
+						}
+					});
+					}
+
+		// ------------------------------- Editar Tarea ----------------------------
+
+			function openModalEdit(data) {
+				$("#edit").modal("show");
+				let padre = data.closest('.card-body');
+				titulo = padre.querySelector('h5').textContent;
+				descripcion = padre.querySelectorAll('p')[0].textContent;
+				radio = padre.querySelectorAll('p')[1].textContent;
+
+				document.getElementById('titulo_Input_Edit').value = titulo;
+				document.getElementById('descripcion_Input_Edit').value = descripcion;
+				document.getElementById('contador_Edit').textContent = descripcion.length+'/150 caracteres';
+				if(radio == "Si"){
+					document.querySelector(`input[name="completada_Input_Edit"][value="1"]`).checked = true;
+				}
+				else{
+					document.querySelector(`input[name="completada_Input_Edit"][value="0"]`).checked = true;
+				}
+				tareaSeleccionada = ''+padre.querySelector('.d-flex').id;
+
+			}
+
+			function editTarea() {
+			var tarea = {
+				IdTarea: tareaSeleccionada,
+				Titulo: $("#titulo_Input_Edit").val(),
+				Descripcion: $("#descripcion_Input_Edit").val(),
+				Completada: parseInt($("input[name='completada_Input_Edit']:checked").val()),
+				IdUsuario: usuarioId
+			}
+
+			jQuery.ajax({
+			url: '@Url.Action("UpdateTarea", "Tareas")',
+			type: "Put",
+			data: JSON.stringify(tarea),
+			dataType: "json",
+			contentType: "application/json; charset=utf-8",
+			success: function (data) {
+				if (data.result == 1) {
+					let padre = document.getElementById(tareaSeleccionada);
+					padre.querySelector('h5').textContent = tarea.Titulo;
+					document.getElementById('descripcion_'+tarea.IdTarea).innerText = ''+tarea.Descripcion;
+					document.getElementById('completada_'+tarea.IdTarea).innerText = tarea.Completada ? "Si" : "No";
+
+					alert("Tarea editada de forma exitosa")
+					tareaSeleccionada = '';
+					$('#edit').modal('hide');
+							}
+						}
+					});
+					}
+
+		// ------------------------------- Eliminar Tarea ----------------------------
+
+		function openModalDelete(data) {
+				$("#delete").modal("show");
+				let padre = data.closest('.card-body');
+				tareaSeleccionada = ''+padre.querySelector('.d-flex').id;
+			}
+
+		function deleteTarea() {
+			var tarea = {
+				IdTarea: tareaSeleccionada,
+				Titulo: "",
+				Descripcion: "",
+				Completada: 1,
+				IdUsuario: usuarioId
+			}
+
+			jQuery.ajax({
+			url: '@Url.Action("DeleteTarea", "Tareas")',
+			type: "Delete",
+			data: JSON.stringify(tarea),
+			dataType: "json",
+			contentType: "application/json; charset=utf-8",
+			success: function (data) {
+				if (data.result == 1) {
+					// Eliminar la tarjeta del DOM
+				$(`#${tareaSeleccionada}`).closest(".col-md-6").remove();
+
+				// Reorganizar las filas de tarjetas
+				const tarjetas = $("#contenedor .col-md-6").toArray();
+				$("#contenedor").empty();
+				let fila = $('<div class="row"></div>');
+
+				tarjetas.forEach((tarjeta, index) => {
+					fila.append(tarjeta);
+					if ((index + 1) % 2 === 0) {
+						$("#contenedor").append(fila);
+						fila = $('<div class="row"></div>');
+					}
+				});
+
+				// Añade la última fila si hay tarjetas sueltas
+				if (fila.children().length > 0) {
+					$("#contenedor").append(fila);
+				}
+
+				alert("Tarea eliminada de forma exitosa");
+				tareaSeleccionada = '';
+				$('#delete').modal('hide');
+							}
+						}
+					});
+					}
+
+		// ------------------------------- Modo Oscuro -----------------------------
+
+		const toggleBtn = document.getElementById("modoToggle");
+		const body = document.body;
+
+		if (localStorage.getItem("modo") === "oscuro") {
+			body.classList.add("modo-oscuro");
+			toggleBtn.innerHTML = "<i class=\"fa-solid fa-sun\"></i>";
+		}
+
+		toggleBtn.addEventListener("click", () => {
+			body.classList.toggle("modo-oscuro");
+
+			if (body.classList.contains("modo-oscuro")) {
+				toggleBtn.innerHTML = "<i class=\"fa-solid fa-sun\"></i>";
+				localStorage.setItem("modo", "oscuro");
+			} else {
+				toggleBtn.innerHTML = "<i class=\"fa-solid fa-moon\"></i>";
+				localStorage.setItem("modo", "claro");
+			}
+		});
+
+		function actualizarContadorCreate(textarea) {
+			// Expansión automática
+			textarea.style.height = 'auto';
+			textarea.style.height = textarea.scrollHeight + 'px';
+
+			// Actualiza el contador
+			const contador = document.getElementById("contador_Create");
+			contador.textContent = `${textarea.value.length}/150 caracteres`;
+		}
+
+		function actualizarContadorEdit(textarea) {
+			// Expansión automática
+			textarea.style.height = 'auto';
+			textarea.style.height = textarea.scrollHeight + 'px';
+
+			// Actualiza el contador
+			const contador = document.getElementById("contador_Edit");
+			contador.textContent = `${textarea.value.length}/150 caracteres`;
+		}
+	</script>
+
+	}

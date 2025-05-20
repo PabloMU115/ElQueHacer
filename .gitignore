@@ -1,0 +1,25 @@
+﻿# Carpetas de compilación
+bin/
+obj/
+
+# Configuraciones de usuario de Visual Studio
+.vs/
+*.user
+*.suo
+
+# Publicaciones
+publish/
+*.dll
+*.exe
+
+# Archivos de base de datos locales
+*.db
+
+# OneDrive (por precaución)
+*.lnk
+~$*
+
+# Otros archivos temporales
+*.log
+
+appsettings.json

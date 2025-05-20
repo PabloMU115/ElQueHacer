@@ -1,0 +1,69 @@
+html {
+  font-size: 14px;
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+}
+
+html {
+  position: relative;
+  min-height: 100%;
+}
+
+body {
+  margin-bottom: 60px;
+}
+
+/* Modo oscuro */
+.modo-oscuro {
+    background-color: #121212;
+    color: #ffffff;
+}
+
+    .modo-oscuro .navbar,
+    .modo-oscuro .footer,
+    .modo-oscuro .modal {
+        background-color: #1f1f1f !important;
+        border-color: #333 !important;
+    }
+
+    .modo-oscuro .card,
+    .modo-oscuro .form-control,
+    .modo-oscuro .table {
+        background-color: #2a2a2a;
+        color: #ffffff;
+        border-color: #444;
+    }
+
+    .modo-oscuro a.nav-link,
+    .modo-oscuro a {
+        color: #cccccc !important;
+    }
+
+    /* Modals en modo oscuro */
+    .modo-oscuro .modal-content {
+        background-color: #2a2a2a;
+        color: #ffffff;
+        border-color: #444;
+    }
+
+    .modo-oscuro .modal-header,
+    .modo-oscuro .modal-footer {
+        border-color: #444;
+    }
+
+    .modo-oscuro .modal-title {
+        color: #ffffff;
+    }
+
+    .modo-oscuro .modal-body {
+        color: #ddd;
+    }
+
