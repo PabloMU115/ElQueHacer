@@ -2,28 +2,34 @@ using Microsoft.EntityFrameworkCore;
 using ElQueHacer.Data;
 
 var builder = WebApplication.CreateBuilder(args);
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnectionMySQL") ?? throw new InvalidOperationException("Connection string 'DefaultConnectionMySQL' not found.");
+
+// Leer string de conexión desde appsettings o variables de entorno
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnectionMySQL")
+    ?? throw new InvalidOperationException("Connection string 'DefaultConnectionMySQL' not found.");
+
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
 
-// Add services to the container.
+// Agregar servicios MVC
 builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// Leer puerto desde variable de entorno (Heroku)
+var port = Environment.GetEnvironmentVariable("PORT") ?? "5000";
+app.Urls.Add($"http://*:{port}");
+
+// Configurar pipeline HTTP
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
+app.UseHttpsRedirection(); // Puedes quitarlo si Heroku no reenvía HTTPS
 app.UseStaticFiles();
 
 app.UseRouting();
-
 app.UseAuthorization();
 
 app.MapControllerRoute(
