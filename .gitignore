@@ -21,5 +21,3 @@ publish/
 
 # Otros archivos temporales
 *.log
-
-appsettings.json
